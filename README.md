@@ -36,3 +36,9 @@ Table of Content
 
 ![image](https://github.com/Zhuuuun/TokyoOlympic2021ETL/assets/96523298/fc37487a-8972-49c9-8a38-3c33f603346e)
 เมื่อ Data factories สร้างเสร็จแล้วให้กด go to resource จากนั้นกด launch studio เพื่อเปิด Data factories studio ขึ้นมาสำหรับใช้ทำ pipeline
+
+4. เมื่อเข้ามาที่หน้า Studio แล้วให้ทำการกดปุ่ม New แล้วเลือก pipeline จากนั้นจะเข้ามาสู่หน้า Studio ที่ใช้ในการสร้าง pipeline แล้วเลือก Copy data (อยู่ใน Activities >> Move and Transform) มาวางลงบน pipeline 
+![image](https://github.com/Zhuuuun/TokyoOlympic2021ETL/assets/96523298/3a4a73ad-488b-4abf-99eb-1294509ac6ce)
+
+
+
