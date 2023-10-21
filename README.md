@@ -113,6 +113,7 @@ Table of Content
 ## Credits
 **Inspired of this project** 
   - https://www.youtube.com/watch?v=IaA9YNlg5hM&t=2663s
+
 **Connect Azure Databricks with Azure Key vault
   - https://learn.microsoft.com/en-us/answers/questions/633235/databricks-support-azure-keyvault-backed-secret-sc
   - https://www.youtube.com/watch?v=ul4Gqehas0w&t=822s
