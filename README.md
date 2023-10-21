@@ -7,17 +7,18 @@ Table of Content
   - Setup storage account
   - Loading data from github to datalake
   - Databricks Config
+  - Data factories and Databricks integration
+  - Execute Pipeline
 - Credit
 
 ## Description
-โปรเจคนี้เป็นการทำ ETL Pipeline เพื่อ
+โปรเจคมีจุดประสงค์เพื่อฝึกใช้งาน tools ต่าง ๆ ใน Azure โดยที่โปรเจคนี้นี้เป็นการทำ ETL Pipeline ด้วย Azure ซึ่ง ETL นี้จะดึงข้อมูล Tokyo Olympic 2021 ซึ่ง host อยู่บน github นี้ไปใส่ใน Datalake จากนั้นจึงนำข้อมูลใน Datalake มา Transform แล้วเก็บไว้ใน Datalake เพื่อให้สามารถดึงไปทำการ Analytic ได้ 
 
 ## Tech Stack
 - Azure Storage
 - Azure DataFactory
 - Azure DataBricks
 - Azure Key-Vault
-- Azure Synapse 
 - PySpark
 ## Prerequisite
 - ต้องมี Microsoft Azure account ที่มีเครติตเพียงพอต่อการใช้งาน
@@ -78,11 +79,40 @@ Table of Content
 > **ซึ่งในตอนนี้จะยัง run ไม่ได้เพราะ code ที่แปะไว้บน github มีการใช้ Azure key vault เพื่อป้องกันไม่ให้ credential อยู่บน code ดังนั้นจึงต้องทำการ config key vault ก่อนจึงจะสามารถใช้งานได้**
 แต่หากไม่ต้องการใช้ Azure key vault สามารถนำ credential ที่จดอยู่ใน notepad มาวางบน code ตาม link นี้ได้เลย - https://docs.databricks.com/en/storage/azure-storage.html
 
-## Key vault config
+### Key vault config
 12. ไปที่ Key vault จากนั้นสร้าง Key vault ขึ้นมาโดย config แค่หน้าแรกเท่านั้นจากนั้นกด Review + create เมื่อสร้างเสร็จแล้วให้ไปที่ Key vault ที่พึ่งสร้างเสร็จแล้วไปที่ **secrets >> Generate/Import** แล้วทำการสร้าง secret ของ **Application (client) ID , Directory (tenant) ID และ Secret ของ App registration** เมื่อใส่ชื่อของ secret กับ value(Credential) เสร็จแล้วทำการกด create ได้เลย
 ![image](https://github.com/Zhuuuun/TokyoOlympic2021ETL/assets/96523298/8dcb6537-42b2-4da6-99e0-84acde10a880)
 จากนั้นไปที่ Access Control (IAM) >> Add >> Add Role assignment จากนั้นเลือก role เป็น **Key Vault Administrator** ต่อมากดที่ select members แล้วในช่องค้นหาทางด้านขวาให้ค้นหาชื่อ **AzureDataBricks** ซึ่งนี่จะเป็นการ assign role ให้ databricks สามารถมาดึง key จาก Key vault ไปใช้ได้
 13. กลับไปที่ตัว Azure DataBricks เพื่อไปสร้าง scope ที่จะสามารถใช้งาน Key vault ได้โดยไปที่ **https://<databricksInstance>#secrets/createScope** (ใน databricks instance จะจบด้วย o=1231531... ให้เติม #secrets/createScope ตามท้ายเพื่อเข้าไปหน้าในการสร้าง scope)
 ![image](https://github.com/Zhuuuun/TokyoOlympic2021ETL/assets/96523298/3ed60778-4192-4c19-8ba0-2b1b497aa7ce)
-> **DNS Name** ให้ใส่ Vault uri และ **Resource ID** ให้ใส่ Resource ID โดยสามารถหาได้จาก key vualt(ที่ใช้กับโปรเจคนี้) >> properties
-เมื่อ config เสร็จแล้วให้กด create 
+> **DNS Name** ให้ใส่ Vault uri และ **Resource ID** ให้ใส่ Resource ID โดยสามารถหาได้จาก key vualt(ที่ใช้กับโปรเจคนี้) >> properties เมื่อ config เสร็จแล้วให้กด create
+
+14. ไปที่ User setting >> Developer >> Access token >> Manage จากนั้นกด generate token แล้วจดรหัส token ที่ได้ลงใน notepad
+![image](https://github.com/Zhuuuun/TokyoOlympic2021ETL/assets/96523298/69966e8f-f614-4e13-8a8d-269c4cd809ff)
+
+### Data factories and Databricks integration
+15. กลับไปที่ Data factories ให้ไปที่ Activities >> Databricks >> Notebooks จากนั้นลาก notebooks ลงมาใน workspace แล้วกดสร้าง linked service ใหม่สำหรับ notebook โดยมี config ดังต่อไปนี้
+![image](https://github.com/Zhuuuun/TokyoOlympic2021ETL/assets/96523298/d6705d8d-40c3-4f31-aea9-c85762be1f39)
+    1. เลือก Subscription และ Workspace
+    2. Select cluster เป็น Existing cluster
+    3. Authentication type เป็น Access token
+    4. ใส่ token ที่ได้มาจาก Databricks ลงไป
+    5. เลือก cluster ที่พึ่งสร้างมา
+จากนั้นกด test connection หากสำเร็จให้กด create
+16. ไปที่ settings แล้วทำการเลือก path ของไฟล์ที่ใช้ในการ Transform จากนั้นให้ลากเส้นเชื่อมระหว่าง Copy data อันสุดท้ายทำให้หลังจากที่ load data เสร็จแล้วก็จะมาทำการ Transform ต่อ โดยเมื่อเสร็จขั้นตอนที่ 16 แล้วจะได้ pipeline ดังภาพด้านล่าง
+![image](https://github.com/Zhuuuun/TokyoOlympic2021ETL/assets/96523298/92459555-d731-4038-aad0-167281ef5eeb)
+
+### Execute Pipeline
+17. ไปที่ Data factories >> Add trigger แล้วกด Trigger now
+![image](https://github.com/Zhuuuun/TokyoOlympic2021ETL/assets/96523298/a2dcbd43-5218-4fa2-8e14-51f1c344f479)
+18. สามารถไป monitor pipeline ได้โดยไปที่ monitor ทางด้านซ้ายแล้วกดไปที่ pipeline ที่กำลัง run อยู่
+![image](https://github.com/Zhuuuun/TokyoOlympic2021ETL/assets/96523298/f5b220c3-bc7d-42ff-95eb-1b9cc0afb1c6)
+19. หาก pipeline run สำเร็จจะเป็นเหมือนภาพด้านล่าง เมื่อ pipeline ทำงานเสร็จเราจะได้ data ที่ Transform แล้วอยู่ใน transformData พร้อมที่จะนำไปทำการ analytic ต่อ
+![image](https://github.com/Zhuuuun/TokyoOlympic2021ETL/assets/96523298/f707bb5a-60ab-4a58-a337-5a13d6926bff)
+
+## Credits
+**Inspired of this project** 
+  - https://www.youtube.com/watch?v=IaA9YNlg5hM&t=2663s
+**Connect Azure Databricks with Azure Key vault
+  - https://learn.microsoft.com/en-us/answers/questions/633235/databricks-support-azure-keyvault-backed-secret-sc
+  - https://www.youtube.com/watch?v=ul4Gqehas0w&t=822s
